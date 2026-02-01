@@ -1,11 +1,10 @@
-
-
 import streamlit as st
 import pandas as pd
 import datetime
 import matplotlib.pyplot as plt
+import plotly.express as px
 
-plt.rcParams["font.family"] = "DejaVu Sans"
+plt.rcParams["font.family"] = "Hiragino Sans"
 
 #CSV読み込み
 def load_data():
@@ -58,21 +57,29 @@ else:
     st.write("データがありません。")
 
 
-#円グラフ（カテゴリ別支出）
-if not df.empty:
-    months = sorted(df["年月"].astype(str).unique(),reverse=True)
-    selected_month = st.selectbox("表示する月を選択",months)
+# 円グラフ（カテゴリ別支出）
+st.subheader("月別カテゴリ支出")
+
+if not df.empty and "年月" in df.columns:
+    # 月一覧を作成
+    month_list = sorted(df["年月"].astype(str).unique(), reverse=True)
+
+    selected_month = st.selectbox("表示する月", month_list)
 
     monthly_data = df[df["年月"].astype(str) == selected_month]
+
     if not monthly_data.empty:
         category_sum = monthly_data.groupby("カテゴリ")["金額"].sum()
-        st.subheader(f"{selected_month}のカテゴリ別支出")
-        st.pyplot(category_sum.plot.pie(
-             labels=category_sum.index,      # ←カテゴリ名をラベルにする
-             autopct="%.1f%%",
-             ylabel=""
-        ).figure)
+
+        fig = px.pie(
+            values=category_sum.values,
+            names=category_sum.index,
+            title=f"{selected_month} のカテゴリ別支出"
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
     else:
         st.info("この月のデータはありません。")
-
+else:
+    st.info("グラフを表示するデータがありません。")
 
